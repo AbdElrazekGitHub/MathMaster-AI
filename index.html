@@ -17,9 +17,6 @@
           inlineMath: [['$', '$'], ['\\(', '\\)']],
           displayMath: [['$$', '$$'], ['\\[', '\\]']],
           processEscapes: true
-        },
-        options: {
-          skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
         }
       };
     </script>
@@ -33,7 +30,6 @@
       .glass-effect {
         background: rgba(255, 255, 255, 0.8);
         backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
         border: 1px solid rgba(255, 255, 255, 0.2);
       }
       .math-gradient {
@@ -48,7 +44,7 @@
         animation: float 3s ease-in-out infinite;
       }
     </style>
-    </head>
+  </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
