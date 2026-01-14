@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
+import { GoogleGenAI, LiveServerMessage, Modality } from '@google/generative-ai';
 
 export const VoiceAssistant: React.FC = () => {
   const [isActive, setIsActive] = useState(false);
