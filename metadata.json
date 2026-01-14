@@ -1,0 +1,7 @@
+{
+  "name": "MathMaster AI - المنصة التعليمية الذكية",
+  "description": "منصة تعليمية متطورة لتعلم الرياضيات مع مدرس ذكي مدعوم بتقنيات Gemini للرد على الاستفسارات وحل المسائل المعقدة.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
