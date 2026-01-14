@@ -1,6 +1,6 @@
-
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { GoogleGenAI } from "@google/genai";
+// 1. استخدام المكتبة الرسمية
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { ChatMessage } from '../types';
 
 declare global {
@@ -17,26 +17,27 @@ export const AITutor: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // تهيئة نموذج الذكاء الاصطناعي وإنشاء جلسة محادثة مستمرة للحفاظ على السياق
+  // 2. تصحيح طريقة استدعاء المفتاح ليتوافق مع Vite و Vercel
+  const genAI = useMemo(() => {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+    return new GoogleGenerativeAI(apiKey);
+  }, []);
+
   const chatSession = useMemo(() => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
-    return ai.chats.create({
-      model: "gemini-3-pro-preview",
-      config: {
-        systemInstruction: "أنت معلم رياضيات خبير ولطيف اسمك 'MathMaster AI'. مهمتك هي مساعدة الطلاب في حل المسائل الرياضية وشرح المفاهيم بوضوح تام باللغة العربية. \n\n" +
-        "قواعد هامة للإجابة:\n" +
-        "1. حافظ على سياق المحادثة: إذا قدمت تمريناً وأجاب الطالب، قم بتصحيح إجابته بناءً على ذلك التمرين.\n" +
-        "2. استخدم تنسيق LaTeX لجميع المعادلات والرموز الرياضية. \n" +
-        "3. ضع المعادلات المستقلة بين $$...$$ والمعادلات المضمنة بين $...$. \n" +
-        "4. استخدم لغة مبسطة وأمثلة توضيحية.\n" +
-        "5. رقم الخطوات بشكل واضح.\n" +
-        "6. تأكد من أن الرموز الرياضية تظهر بشكل احترافي.",
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash", // استخدام موديل مستقر وسريع
+      systemInstruction: "أنت معلم رياضيات خبير ولطيف اسمك 'MathMaster AI'. مهمتك هي مساعدة الطلاب في حل المسائل الرياضية وشرح المفاهيم بوضوح تام باللغة العربية. استخدم تنسيق LaTeX للمعدلات.",
+    });
+
+    return model.startChat({
+      history: [],
+      generationConfig: {
+        maxOutputTokens: 1000,
         temperature: 0.7,
       },
     });
-  }, []);
+  }, [genAI]);
 
-  // تحديث عرض المعادلات الرياضية عند إضافة رسائل جديدة
   useEffect(() => {
     if (window.MathJax && window.MathJax.typesetPromise) {
       window.MathJax.typesetPromise().catch((err: any) => console.error('MathJax error:', err));
@@ -55,9 +56,10 @@ export const AITutor: React.FC = () => {
     setIsTyping(true);
 
     try {
-      // إرسال الرسالة عبر جلسة المحادثة (sendMessage) لضمان الترابط
-      const result = await chatSession.sendMessage({ message: input });
-      const responseText = result.text;
+      // 3. طريقة الإرسال الصحيحة للموديل الجديد
+      const result = await chatSession.sendMessage(input);
+      const response = await result.response;
+      const responseText = response.text();
       
       const aiMsg: ChatMessage = { role: 'assistant', content: responseText || '', timestamp: new Date() };
       setMessages(prev => [...prev, aiMsg]);
@@ -65,7 +67,7 @@ export const AITutor: React.FC = () => {
       console.error("Chat Error:", error);
       const errorMsg: ChatMessage = { 
         role: 'assistant', 
-        content: "عذراً، حدث خطأ في الاتصال بالجلسة. يرجى المحاولة مرة أخرى.", 
+        content: "عذراً، حدث خطأ في الاتصال. تأكد من إعداد مفتاح API بشكل صحيح.", 
         timestamp: new Date() 
       };
       setMessages(prev => [...prev, errorMsg]);
@@ -76,7 +78,7 @@ export const AITutor: React.FC = () => {
 
   return (
     <div className="flex flex-col h-[600px] w-full max-w-2xl mx-auto glass-effect rounded-3xl shadow-2xl overflow-hidden border border-blue-100">
-      {/* Header */}
+      {/* الباقي من كود واجهة UI كما هو في ملفك الأصلي */}
       <div className="math-gradient p-6 text-white flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="bg-white/20 p-3 rounded-full float-anim">
@@ -92,7 +94,6 @@ export const AITutor: React.FC = () => {
         </div>
       </div>
 
-      {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/50">
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -121,7 +122,6 @@ export const AITutor: React.FC = () => {
         )}
       </div>
 
-      {/* Input */}
       <div className="p-4 bg-white border-t border-slate-100">
         <div className="flex gap-2 bg-slate-100 p-2 rounded-2xl focus-within:ring-2 ring-blue-500 transition-all">
           <input
